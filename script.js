@@ -24,63 +24,38 @@ let helpBtn=document.querySelector(".icon");
 let helpState=false;
 let helpContainer=document.querySelector(".help-container");
 let dueDate=document.querySelector(".duedate");
+let addingTasksBtn=document.querySelector(".modal_box");
 
 let smallContainer1=document.querySelector(".small-container.one");
 let smallContainer2=document.querySelector(".small-container.two");
 let smallContainer3=document.querySelector(".small-container.three");
 let smallContainer4=document.querySelector(".small-container.four");
 
-//Getting all the elements from allTasks from LocalStorage
-if(localStorage.getItem("allTasks"))
+
+
+//Made this as a function so I can reuse it in handleDeleteContainer() around Line 508
+
+function getTasksFromLocalStorage()
 {
-    let strArr=localStorage.getItem("allTasks");
-    ticketsArr=JSON.parse(strArr);
-    for(let i=0;i<ticketsArr.length;i++)
-    {
-        let id=ticketsArr[i][0];
-        let task=ticketsArr[i][1];
-        let color=ticketsArr[i][2];
-        // let date=ticketsArr[i][3];
-
-        let ticketContainer=document.createElement("div");
-        ticketContainer.setAttribute("class","ticker-container");
-
-        //Getting Individual Items and making tickets of each and every task
-        ticketContainer.innerHTML=`
-        <div class="ticket-color ${color}"></div>
-        <div class="ticket_sub-container">
-            <h3 class="ticket-id">#${id}</h3>
-            <p class="task-desc" contenteditable="true">${task}</p>
-        </div>
-        `;
-
-        // <p class="date" contenteditable="true">Date: - ${date}</p>
-
-        // mainContainer.appendChild(ticketContainer);
-        if(color=='lightpink')
+    console.log("Getting tasks from local storage");
+    
+        if(localStorage.getItem("allTasks"))
         {
-            smallContainer1.appendChild(ticketContainer);
+            let strArr=localStorage.getItem("allTasks");
+            ticketsArr=JSON.parse(strArr);
+            for(let i=0;i<ticketsArr.length;i++)
+            {
+                let id=ticketsArr[i][0];
+                let task=ticketsArr[i][1];
+                let color=ticketsArr[i][2];
+                console.log("Id  ",id,"Task  ",task,"Color  ",color);
+                createTicket(task,color,id);
+            }
         }
-        else if(color=='lightblue')
-        {
-            smallContainer2.appendChild(ticketContainer);
-        }
-        else if(color=='lightgreen')
-        {
-            smallContainer3.appendChild(ticketContainer);
-        }
-        else
-        {
-            smallContainer4.appendChild(ticketContainer);
-        }
-        let colorStripElement=ticketContainer.querySelector(".ticket-color");
-        handleColorContainer(colorStripElement,ticketsArr[i])
-        handleDeleteContainer(ticketContainer,ticketsArr);
-        handleLockContainer(ticketContainer);
-        handleUnlockContainer(ticketContainer);
-        handleTextEdit(ticketContainer,id);
-    }
 }
+
+getTasksFromLocalStorage();
+
 
 
 let flag=false;
@@ -92,7 +67,6 @@ for(let i=0;i<filterOptions.length;i++)
     filterOptions[i].addEventListener("click",function(e){
         let arr=filterOptions[i].children;
         let chclassesArr=arr[0].classList;
-        console.log(chclassesArr[0]);
         
 
         //Changing BGC by directly clicking on the color
@@ -200,7 +174,7 @@ addBtn.addEventListener("click",function(e){
 
 // console.log(helpState);
 helpBtn.addEventListener("click",function(){
-    console.log(helpState);
+    // console.log(helpState);
     if(helpState==false)
     {
         helpContainer.style.display="block";
@@ -237,6 +211,7 @@ descBox.addEventListener("keydown", function (e) {
         //  clean up 
         // let date=dueDate.value;
         // console.log(date);
+        
         createTicket(task,cColor);
         // cColor = colors[colors.length - 1];
         modalContainer.style.display = "none";
@@ -245,48 +220,35 @@ descBox.addEventListener("keydown", function (e) {
     }
 })
 
-// let flag2=false;
-// smallAdd.addEventListener("click",function(){
-//     if(flag2==false)
-//     {
-//         modalContainer.style.display="flex";
-//     }
-//     else
-//     {
-//         modalContainer.style.display="none";
-//     }
-//     flag2=!flag2;
-//     descBox.value="";
-// })
+addingTasksBtn.addEventListener("click",function(e){
+    let task = descBox.value;
+    // console.log(task.length);
+    createTicket(task,cColor);
+    modalContainer.style.display = "none";
+    flag = false;
+    descBox.value = "";
 
-// for(let i=0;i<smallAdd.length;i++)
-// {
-//     let flag2=false;
-//     smallAdd[i].addEventListener("click",function(){
-//         if(flag2==false)
-//         {
-//             modalContainer.style.display="flex";
-//         }
-//         else
-//         {
-//             modalContainer.style.display="none";
-//         }
-//         flag2=!flag2;
-//         descBox.value="";
-//     })
-// }
+})
 
-let abc;
 
 
 //Creating Individual Tickets
-function createTicket(task,cColor){
+function createTicket(task,cColor,myId){
 
     let ticketContainer=document.createElement("div");
     ticketContainer.setAttribute("class","ticker-container");
 
     //Getting id from uid
-    let id=uid();
+    let id;
+    if(!myId)
+    {
+        id=uid();
+    }
+    else
+    {
+        id=myId;
+    }
+    // let id=myId || uid();
     //Creating HTML elements
     ticketContainer.innerHTML=`
     <div class="ticket-color ${cColor}"></div>
@@ -297,11 +259,15 @@ function createTicket(task,cColor){
     `;
     // <p class="date">Date: - ${date}</p>
     //Pushing in Local Storage
-    let singleArr=[id,task,cColor];
-    ticketsArr.push(singleArr);
-    let strArr=JSON.stringify(ticketsArr);
-    localStorage.setItem("allTasks",strArr);
-
+    
+    //I have done something bad in code here, without making objects in Array, I just pushed in singleArr
+    if(!myId)
+    {
+        let singleArr=[id,task,cColor];
+        ticketsArr.push(singleArr);
+        let strArr=JSON.stringify(ticketsArr);
+        localStorage.setItem("allTasks",strArr);
+    }
 
     if(cColor=='lightpink')
     {
@@ -322,7 +288,9 @@ function createTicket(task,cColor){
 
     // mainContainer.appendChild(ticketContainer);
     let colorStripElement=ticketContainer.querySelector(".ticket-color");
-    handleColorContainer(colorStripElement,singleArr);
+    let singleArr=[id,task,cColor];
+    
+    handleColorContainer(colorStripElement,singleArr,ticketContainer);
     handleDeleteContainer(ticketContainer,singleArr);
     handleLockContainer(ticketContainer);
     handleUnlockContainer(ticketContainer);
@@ -335,17 +303,73 @@ function createTicket(task,cColor){
     // })
 }
 
+function handleDeleteContainer(ticketContainer,singleArr)
+{
+    // console.log(ticketsArr);
+    ticketContainer.addEventListener("click",function(){
+        if(deleteState==true)
+        {
+            // console.log("SingleArr111",singleArr);
+            // console.log(ticketsArr);
+            let arr=singleArr;
+            // console.log("Single Arr",singleArr);
+            let id=arr[0];
+            // console.log("ID1",id);
+            let idToBeDeleted;
+            for(let i=0;i<ticketsArr.length;i++)
+            {
+                let ticket=ticketsArr[i];
+                if(ticket[0]==id)
+                {
+                    idToBeDeleted=i;
+                    break;
+                }
+            }
+            // console.log("IDDDDDDD",idToBeDeleted);
+            // let idx=ticketsArr.indexOf(arr);
+            let idx=idToBeDeleted;
+            // console.log("IDXX",idx);
+            ticketsArr.splice(idx,1);
+            // console.log(ticketsArr);
+            let strArr=JSON.stringify(ticketsArr);
+            localStorage.setItem("allTasks",strArr);
+            //ui
+            ticketContainer.remove();
+
+
+
+
+
+
+            // let elem=ticketContainer.querySelector(".ticket-id");
+            // let toBeDeletedId=elem.innerText.slice(1);
+            // // console.log(toBeDeletedId);
+            // let idx=ticketsArr.findIndex(function(ticket){
+            //     console.log(ticket.id,",,,,,,,,,,",toBeDeletedId);
+            //     return ticket.id==toBeDeletedId;
+            // })
+            
+            // console.log("IDX",idx);
+        //     ticketsArr.splice(idx,1);
+        //     localStorage.setItem("allTasks", JSON.stringify(ticketsArr));
+        // //    UI remove
+        //     ticketContainer.remove();
+        
+        }
+    })
+}
+
 function handleTextEdit(ticketContainer,mainId)
 {
-    console.log("Hello");
+    // console.log("Hello");
     let taskDesc=ticketContainer.querySelector(".task-desc");
-    console.log(taskDesc);
+    // console.log(taskDesc);
     // taskDesc.addEventListener("keydown",function(e)
     ticketContainer.addEventListener("click",function(){
 
         // console.log(e);
         let newText=taskDesc.innerText;
-        console.log(newText);
+        // console.log(newText);
         // newText+=e.key;
         let strArr=localStorage.getItem("allTasks");
         ticketsArr=JSON.parse(strArr);
@@ -353,18 +377,18 @@ function handleTextEdit(ticketContainer,mainId)
         {
             let id=ticketsArr[i][0];
             let task=ticketsArr[i][1];
-            console.log(mainId,id);
+            // console.log(mainId,id);
             if(mainId==id)
             {
-                console.log("Iffffff");
-                console.log(newText);
+                // console.log("Iffffff");
+                // console.log(newText);
                 task=newText;
-                console.log(task);
+                // console.log(task);
             }
-            console.log(task);
+            // console.log(task);
             ticketsArr[i][1]=task;
         }
-        console.log(ticketsArr);
+        // console.log(ticketsArr);
         strArr=JSON.stringify(ticketsArr);
         localStorage.setItem("allTasks",strArr);
     
@@ -436,11 +460,14 @@ function handleUnlockContainer(ticketContainer)
 }
 
 
-function handleColorContainer(colorStripElement,ticketArr)
+function handleColorContainer(colorStripElement,ticketArr,ticketContainer)
 {
+    //Even this line is not printing on some containers when the color strip is clicked and sometimes it is printed
+    console.log("Calling Color Container");
     
     // let classes=colorStripElement.getAttribute("class");
     colorStripElement.addEventListener("click",function(){
+        console.log("hiii");
         let classes=colorStripElement.classList;
         let initColor=classes[1];
 
@@ -448,13 +475,68 @@ function handleColorContainer(colorStripElement,ticketArr)
         let newIdx=(idx+1)%4;
         let newColor=colors[newIdx];
 
+        //Removing Old Color
         colorStripElement.classList.remove(initColor);
 
+        //Adding New Color
         colorStripElement.classList.add(newColor);
 
+        // console.log(ticketArr);
+        //Color Channge in Database
         finalColorChange(newColor,ticketArr);
+        ticketArr[2]=newColor;
+
+        //Old Method: - Just removed the ticket from container A and making that in new Container in B(Easy Method even in Time Complexity too)
+
+        // console.log(ticketArr);
+        // forceDelete(ticketContainer,ticketArr);
+        // ticketArr[2]=newColor;
+        // handleDeleteContainer(ticketContainer,ticketArr);
+        // createTicket(ti)
+
+        //New Method: - Delete all the tickets from UI and then Local Storage se sabko firse call krdo 
+        //UI Delete
+
+        let allTickets=document.querySelectorAll(".ticker-container");
+        for(let i=0;i<allTickets.length;i++)
+        {
+            allTickets[i].remove();
+            console.log("Removing ",i);
+        }
+
+        //Direct Calling this fn for getting it in Local Storage
+
+        getTasksFromLocalStorage();
+        
     })
     
+}
+
+function forceDelete(ticketContainer,singleArr)
+{
+    // console.log(ticketContainer);
+    let mainText=singleArr[1];
+    let mainColor=singleArr[2];
+    let arr=singleArr;
+    let id=arr[0];
+    let idToBeDeleted;
+    for(let i=0;i<ticketsArr.length;i++)
+    {
+        let ticket=ticketsArr[i];
+        if(ticket[0]==id)
+        {
+            idToBeDeleted=i;
+            break;
+        }
+    }
+    let idx=idToBeDeleted;
+    ticketsArr.splice(idx,1);
+    let strArr=JSON.stringify(ticketsArr);
+    localStorage.setItem("allTasks",strArr);
+    //UI
+    ticketContainer.remove();
+
+    createTicket(mainText,mainColor);
 }
 
 function finalColorChange(color,singleArr)
@@ -478,22 +560,8 @@ function finalColorChange(color,singleArr)
     localStorage.setItem("allTasks",strArr);
 }
 
-function handleDeleteContainer(ticketContainer,singleArr)
-{
-    ticketContainer.addEventListener("click",function(){
-        if(deleteState==true)
-        {
-            let arr=singleArr;
-            let idx=ticketsArr.indexOf(arr);
-            ticketsArr.splice(idx,1);
-            let strArr=JSON.stringify(ticketsArr);
-            localStorage.setItem("allTasks",strArr);
-            //ui
-            ticketContainer.remove();
-        
-        }
-    })
-}
+
+
 
 // function deleteTicket(ticketContainer)
 // {
@@ -506,10 +574,6 @@ function handleDeleteContainer(ticketContainer,singleArr)
 // function deleteTicket(){
 
 // }
-
-
-
-
 
 
 // descBox.addEventListener("keydown",function(e){
